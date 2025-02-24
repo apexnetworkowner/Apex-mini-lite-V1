@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Apex Proxy</title>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <style>
+    /* BASIC RESET & TYPOGRAPHY */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+    :root {
+      --primary: #9333EA;
+      --secondary: #E879F9;
+      --accent: #F0ABFC;
+      --background: #0A0118;
+
+      /* Scrollbar defaults */
+      --scrollbar-thumb-color: #9CA3AF;
+      --scrollbar-track-color: #1F2937;
+      --scrollbar-thumb-hover-color: #757575;
+    }
+
+    body {
+      background-color: var(--background);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* BACKGROUND VIDEO */
+    #background-video {
+      position: fixed;
+      top: 0;
+      left: 0;
+      min-width: 100%;
+      min-height: 100%;
+      object-fit: cover;
+      z-index: -1;
+    }
+
+    /* CONTAINER */
+    .container {
+      position: relative;
+      z-index: 1;
+      width: 90%;
+      max-width: 600px;
+      text-align: center;
+    }
+
+    .title {
+      font-size: 4rem;
+      font-weight: bold;
+      margin-bottom: 1.5rem;
+      background: linear-gradient(135deg, var(--primary), var(--secondary), var(--accent));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 0 40px rgba(147, 51, 234, 0.3);
+    }
+
+    /* SEARCH BAR & RECOMMENDATIONS */
+    .search-container {
+      position: relative;
+      margin-bottom: 2rem;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 1rem 1.5rem;
+      font-size: 1.1rem;
+      background: rgba(0, 0, 0, 0.3);
+      border: 2px solid var(--primary);
+      border-radius: 50px;
+      color: white;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+    .search-input:focus {
+      border-color: var(--secondary);
+      box-shadow: 0 0 20px rgba(147, 51, 234, 0.3);
+    }
+
+    .recommendations {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      width: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      border: 1px solid var(--primary);
+      border-radius: 10px;
+      margin-top: 0.5rem;
+      display: none;
+      backdrop-filter: blur(10px);
+    }
+    .recommendation-item {
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      color: var(--primary);
+    }
+    .recommendation-item:hover {
+      background: rgba(147, 51, 234, 0.2);
+    }
+
+    /* SETTINGS BUTTON & PANEL */
+    .settings-btn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      color: var(--primary);
+      cursor: pointer;
+      padding: 0.5rem;
+      font-size: 1.5rem;
+      transition: color 0.3s;
+    }
+    .settings-btn:hover {
+      color: var(--secondary);
+    }
+
+    .settings-panel {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.9);
+      padding: 2rem;
+      border-radius: 15px;
+      border: 2px solid var(--primary);
+      display: none;
+      z-index: 10;
+      backdrop-filter: blur(10px);
+      min-width: 300px;
+    }
+    .settings-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    .settings-title {
+      font-size: 1.5rem;
+      color: var(--primary);
+    }
+    .close-btn {
+      background: none;
+      border: none;
+      color: var(--primary);
+      cursor: pointer;
+      font-size: 1.5rem;
+    }
+
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      z-index: 5;
+    }
+
+    /* THEME SELECTOR & SWITCHES */
+    .theme-selector {
+      margin-bottom: 1rem;
+      max-height: 200px; /* Just to limit the height for demonstration */
+      overflow-y: scroll;
+      scrollbar-width: thin; 
+      scrollbar-color: var(--scrollbar-thumb-color) var(--scrollbar-track-color);
+    }
+    .theme-selector::-webkit-scrollbar {
+      width: 8px;
+    }
+    .theme-selector::-webkit-scrollbar-track {
+      background: var(--scrollbar-track-color);
+    }
+    .theme-selector::-webkit-scrollbar-thumb {
+      background-color: var(--scrollbar-thumb-color);
+      border-radius: 4px;
+    }
+    .theme-selector::-webkit-scrollbar-thumb:hover {
+      background-color: var(--scrollbar-thumb-hover-color);
+    }
+
+    .theme-btn {
+      padding: 0.5rem 1rem;
+      margin: 0.25rem;
+      border: 1px solid var(--primary);
+      background: rgba(0, 0, 0, 0.3);
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .theme-btn:hover {
+      background: var(--primary);
+    }
+
+    .switch-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 1rem 0;
+    }
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+	/* Style the tab bar */
+#tab-bar {
+  display: flex;
+  align-items: center;
+  background: #1c1c1c;
+  padding: 0.5rem;
+}
+
+#tab-list {
+  list-style: none;
+  display: flex;
+  margin: 0;
+  padding: 0;
+  flex-grow: 1;
+}
+
+#tab-list li {
+  padding: 0.5rem 1rem;
+  margin-right: 0.5rem;
+  background: var(--primary);
+  color: white;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+#tab-list li.active {
+  background: var(--secondary);
+}
+
+/* New tab button */
+#new-tab {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+/* Tab content container */
+.display {
+  display: none;
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 90%;
+  z-index: 15;
+}
+
+/* Make the active tab visible */
+.display.active {
+  display: block;
+}
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.3);
+      transition: .4s;
+      border-radius: 24px;
+      border: 1px solid var(--primary);
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 4px;
+      bottom: 3px;
+      background-color: var(--primary);
+      transition: .4s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: var(--primary);
+    }
+    input:checked + .slider:before {
+      transform: translateX(26px);
+      background-color: white;
+    }
+
+    /* TOOLBAR & IFRAME DISPLAY */
+    #display {
+      display: none; 
+      position: fixed; 
+      left: 0px; 
+      z-index: 15;
+    }
+
+    #toolbar {
+      background-color: #1c1c1c; 
+      width: 100%; 
+      top: 0px; 
+      position: fixed; 
+      left: 0px; 
+      height: 10%; 
+      display: flex;
+      align-items: center;
+    }
+
+    .toolbar-icon {
+      font-size: 38px;
+      color: white;
+      cursor: pointer;
+      margin-left: 2%;
+    }
+
+    .home-icon {
+      margin-left: 3%;
+    }
+
+    .forward-icon {
+      margin-left: 2%;
+    }
+	/* Replace your existing .toolbar-icon rule with: */
+.toolbar-icon {
+  font-size: 38px;
+  color: var(--secondary); /* Icons now match the theme's secondary color */
+  cursor: pointer;
+  margin-left: 2%;
+}
+
+/* Optional: change hover state if desired */
+.toolbar-icon:hover {
+  color: var(--primary); /* or keep it the same, or choose another color */
+}
+
+
+iframe {
+  background-color: white;
+  border: none;
+}
+/* BASIC RESET & TYPOGRAPHY */
+/* ... (rest of your BASIC RESET & TYPOGRAPHY CSS remains the same) ... */
+
+/* BODY STYLES */
+body {
+    background-color: var(--background);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+/* BACKGROUND VIDEO */
+/* ... (rest of your BACKGROUND VIDEO CSS remains the same) ... */
+
+/* CONTAINER */
+/* ... (rest of your CONTAINER CSS remains the same) ... */
+
+/* TITLE */
+/* ... (rest of your TITLE CSS remains the same) ... */
+
+/* SEARCH BAR & RECOMMENDATIONS */
+/* ... (rest of your SEARCH BAR & RECOMMENDATIONS CSS, with accessibility adjustment) ... */
+.search-input {
+    width: 100%;
+    padding: 1rem 1.5rem;
+    font-size: 1.1rem;
+    background: rgba(0, 0, 0, 0.3);
+    border: 2px solid var(--primary);
+    border-radius: 50px;
+    color: white;
+    /* outline: none;  Consider removing or providing a stronger focus indicator for accessibility */
+    transition: all 0.3s ease;
+}
+.search-input:focus {
+    border-color: var(--secondary);
+    box-shadow: 0 0 20px rgba(147, 51, 234, 0.3); /* Ensure this box-shadow is sufficient if outline is removed */
+    /* Or, for better accessibility, use a more prominent focus style: */
+    /* box-shadow: 0 0 0 3px var(--secondary); */
+    /* outline: 2px solid var(--secondary); /* Example of using outline but styling it */
+    /* outline-offset: 2px; */
+}
+
+
+.recommendations {
+    /* ... rest of your RECOMMENDATIONS CSS ... */
+    display: none; /* Controlled by JavaScript to show/hide on search input focus */
+    backdrop-filter: blur(10px);
+}
+
+/* SETTINGS BUTTON & PANEL */
+/* ... (rest of your SETTINGS BUTTON & PANEL CSS remains the same) ... */
+.settings-panel {
+    /* ... rest of your SETTINGS PANEL CSS ... */
+    display: none; /* Controlled by JavaScript to show/hide */
+    z-index: 10;
+    /* ... */
+}
+
+
+/* OVERLAY */
+/* ... (rest of your OVERLAY CSS remains the same) ... */
+.overlay {
+    /* ... rest of your OVERLAY CSS ... */
+    display: none; /* Controlled by JavaScript to show/hide */
+    z-index: 5;
+    /* ... */
+}
+
+/* THEME SELECTOR & SWITCHES */
+/* ... (rest of your THEME SELECTOR & SWITCHES CSS remains the same) ... */
+
+/* TAB BAR & DISPLAY */
+#tab-bar {
+    display: flex;
+    align-items: center;
+    background: #1c1c1c;
+    padding: 0.5rem;
+}
+
+#tab-list {
+    list-style: none;
+    display: flex;
+    margin: 0;
+    padding: 0;
+    flex-grow: 1;
+}
+
+#tab-list li {
+    padding: 0.5rem 1rem;
+    margin-right: 0.5rem;
+    background: var(--primary);
+    color: white;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+#tab-list li.active {
+    background: var(--secondary);
+}
+
+/* New tab button */
+#new-tab {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.display {
+    display: none; /* Hidden by default, shown by JavaScript when active */
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 90%;
+    z-index: 15;
+}
+
+.display.active {
+    display: block;
+}
+
+/* SWITCH STYLES */
+/* ... (rest of your SWITCH STYLES CSS remains the same) ... */
+
+/* TOOLBAR & IFRAME DISPLAY */
+#toolbar {
+    background-color: #1c1c1c;
+    width: 100%;
+    top: 0px;
+    position: fixed;
+    left: 0px;
+    height: 10%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start; /* Or space-between */
+    gap: 2%; /* Consistent spacing between toolbar items */
+}
+
+.toolbar-icon {
+    font-size: 38px;
+    color: var(--secondary);
+    cursor: pointer;
+    /* margin-left: 2%; Remove if using gap in #toolbar */
+}
+
+
+/* REMOVE THESE RULES - Spacing handled by gap in #toolbar now */
+/* .home-icon {
+    margin-left: 3%;
+}
+
+.forward-icon {
+    margin-left: 2%;
+} */
+
+
+.toolbar-icon:hover {
+    color: var(--primary);
+}
+
+
+iframe {
+    background-color: white;
+    border: none;
+}
+
+/* REMOVE REDUNDANT #display RULE */
+/* #display {
+    display: none;
+} */
+  </style>
+</head>
+<body>
+  <!-- BACKGROUND VIDEO -->
+  <video autoplay muted loop id="background-video">
+    <source id="srcc" src="https://videos.pexels.com/video-files/3051489/3051489-uhd_2560_1440_25fps.mp4" type="video/mp4">
+  </video>
+
+  <!-- MAIN CONTAINER -->
+  <div class="container">
+    <h1 class="title">APEX Proxy Lite</h1>
+    <div class="search-container">
+      <input type="text" class="search-input" placeholder="Enter URL or search query..."/>
+      <div class="recommendations"></div>
+    </div>
+  </div>
+
+  <!-- SETTINGS BUTTON & PANEL -->
+  <button class="settings-btn">⚙️</button>
+  <div class="overlay"></div>
+  
+  <div class="settings-panel">
+    <div class="settings-header">
+      <span class="settings-title">Settings</span>
+      <button class="close-btn">✖</button>
+    </div>
+    <div class="theme-selector">
+      <h3>Themes</h3>
+      <button class="theme-btn" data-theme="cosmic">Cosmic</button>
+      <button class="theme-btn" data-theme="nebula">Nebula</button>
+      <button class="theme-btn" data-theme="aurora">Aurora</button>
+      <button class="theme-btn" data-theme="solstice">Solstice</button>
+      <button class="theme-btn" data-theme="ocean">Ocean</button>
+      <button class="theme-btn" data-theme="forest">Forest</button>
+
+    </div>
+
+    <div class="switch-container">
+      <span>Auto Blank</span>
+      <label class="switch">
+        <input type="checkbox" id="autoBlank"/>
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="switch-container">
+      <span>Anti Close</span>
+      <label class="switch">
+        <input type="checkbox" id="antiClose"/>
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <!-- The following line is presumably placeholder text -->
+    oiled up by devi, thug shaked by zenith
+  </div>
+
+  <!-- HIDDEN DISPLAY CONTAINER FOR IFRAME -->
+  <div id="display">
+    <button id="homeButton" style="position: fixed; bottom: 10px; right: 10px; z-index: 100; background-color: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">Home</button>
+    <script>
+      document.getElementById('homeButton').addEventListener('click', () => {
+        location.reload();
+      });
+    </script>
+    <iframe 
+      id="mainFrame" 
+      style="height: 100%; position: fixed; bottom: 0px; width: 100%;">
+    </iframe>
+  </div>
+
+  <!-- Scripts -->
+  <script src="./uv/uv.bundle.js"></script>
+  <script src="./uv/uv.config.js"></script>
+  <script src="./assets/register-sw.js"></script>
+  <script>
+       let typing = 0;
+    // THEME CONFIGURATIONS
+    const themes = {
+        cosmic:     { primary: '#9333EA', secondary: '#E879F9', accent: '#F0ABFC', background: '#0A0118', video: 'https://videos.pexels.com/video-files/30706899/13138099_1920_1080_30fps.mp4'},
+        nebula:     { primary: '#3B82F6', secondary: '#60A5FA', accent: '#93C5FD', background: '#010B18', video: 'https://videos.pexels.com/video-files/6961824/6961824-uhd_2560_1440_30fps.mp4' },
+        aurora:     { primary: '#10B981', secondary: '#34D399', accent: '#6EE7B7', background: '#011810', video: 'https://videos.pexels.com/video-files/5600929/5600929-hd_1920_1080_25fps.mp4' },
+        solstice:  { primary: '#F59E0B', secondary: '#FACC15', accent: '#FFF59D', background: '#1F1D1A', video: 'https://videos.pexels.com/video-files/19145212/19145212-uhd_2560_1440_24fps.mp4' },
+        ocean:      { primary: '#1C4E89', secondary: '#377DC8', accent: '#60A5FA', background: '#082F49', video: 'https://videos.pexels.com/video-files/1918465/1918465-uhd_2560_1440_24fps.mp4' },
+        forest:     { primary: '#22C55E', secondary: '#34D399', accent: '#65A30D', background: '#1A2417', video: 'https://videos.pexels.com/video-files/2330708/2330708-uhd_2560_1440_24fps.mp4'},
+    }
+    // AUTOCOMPLETE RECOMMENDATIONS (currently empty array)
+    const recommendations = [];
+
+    // DOM ELEMENTS
+    const searchInput                     = document.querySelector('.search-input');
+    const recommendationsContainer    = document.querySelector('.recommendations');
+    const settingsBtn                     = document.querySelector('.settings-btn');
+    const settingsPanel                   = document.querySelector('.settings-panel');
+    const closeBtn                        = document.querySelector('.close-btn');
+    const overlay                         = document.querySelector('.overlay');
+    const themeButtons                      = document.querySelectorAll('.theme-btn');
+    const autoBlankToggle               = document.getElementById('autoBlank');
+    const antiCloseToggle               = document.getElementById('antiClose');
+
+    // AUTOCOMPLETE FUNCTIONALITY
+    searchInput.addEventListener('input', (e) => {
+        const userData = e.target.value.trim();
+        if (!userData) {
+            recommendationsContainer.style.display = 'none';
+            return;
+        }
+
+        fetch("https://corsproxy.io/https://rizzmass.huh.loseyourip.com/search_complete/" + encodeURIComponent(userData))
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.text();
+            })
+            .then(data => {
+                try {
+                    const jsonData = JSON.parse(data);
+                    const suggestions = jsonData[1];
+                    if (suggestions && suggestions.length) {
+                        recommendationsContainer.innerHTML = suggestions
+                            .slice(0,5)
+                            .map(suggestion => {
+                                const suggestionText = Array.isArray(suggestion) ? suggestion[0] : suggestion;
+                                return `<div class="recommendation-item">${suggestionText}</div>`;
+                            })
+                            .join('');
+                        recommendationsContainer.style.display = 'block';
+                    } else {
+                        recommendationsContainer.style.display = 'none';
+                    }
+                } catch (error) {
+                    console.error("Error parsing JSON:", error, data);
+                    recommendationsContainer.style.display = 'none';
+                }
+            })
+            .catch(error => {
+                console.error("Error fetching or processing autocomplete data:", error);
+                recommendationsContainer.style.display = 'none';
+            });
+    });
+
+    searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            handleSearch(e.target.value.trim());
+        }
+    });
+
+    // SEARCH FUNCTION
+    function handleSearch(query) {
+        console.log(`Search query: ${query}`);
+        // If user typed something that doesn't look like a URL
+        if (!query.includes(".") && !query.startsWith("https://")) {
+            query = "https://searx.be/?preferences=eJx1WMuu4zYS_ZrxRoiBTAYYZOFVgGwTYLIXKLIsVYtkqfmwrfv1U9TDKlrdi6tuFcViPU8dWqsEPQWEeOvBQ1D2YpXvs-rhpnKiiyWtLNzAX8qrJjdZSHCLSYU08VeXu3qgJt8GiGQfEG4XdCxvp0Cv-fZPyHBxkAYyt7__-t8_l6juEEEFPdx-vaQBHOvCovTCCrJNsWVdHp5tUt3tT2UjXAzhoZ0Uv14p9Jd1WxvTbDdbNfgEoVUWe-_4_9t-ZR7KazDtdu4q_Z4hzC36NmFiBYuh6O_oMbFSHcja7ct1W7FLr9GaWZMFndZNA6UR5ngzcFfswCUH294pOJUS-v42BUhpvhiMqrNsBPgePYf79171bRtJo7KNA4PqX__-g53roIkc6LFtlzjGWto80AC17fLP55rKBnnN5Yi6LFl4KW8CqrbdkrtIJz6_sejzq5mUHsshfFgqa96r2BRv8QFte0e7nj-NjcMQKEgZB7_hZzk7yI-94nIwalPp8UWxeeKI-xkhoZbOhRc-OBAagZNUBHGU9nZosfwJnzuOa_2J75tVoVC8SNc91d7UZT1C2szppq5SlQz2_eENTeC57CIIxUuyrlrrqwGhWVvK5m5VAIVSpZ64BO4QinvboVxdMbJQus2yp3kgV77YO8P08Xr2swi5YVhUnkUTVyCC3GcAvrgx3pVhgPs3IW8hbsGwSB6ofGlqodmYvuGqLi2B5KPUyEbP7PDWGnKB3UBzKC6ZNypVJWg4AeWvpx9Lzz6KtVNGxVoVBiF_girmHFat1evUxJ_zs9jt6BtOJbPHV9y_MFeB_PUljLqbQMXVvVY4UCYNKjkGNfmZRT0GKQjAHUv39ORaaQwGhpICKmtt3AP6EZVskfs8i4j2gF8DA5OQMIKpbq8tMtBB6LdXXgMuVnL7O5HhCjVyO1HP0TgFdpNHPRBXtazVbWWyai4QEI8YyBVHXM5SIUMihAJ3ZWDI9A6qC6o8NiMHhiUIazZXAbzercNK4rXg3PKOznSHK-j6LEONXonzOb-Ba3kWH3zDONCxn6EmqDA3JeMRhV9fv2xLh2j_lu4Nu9PzhJIulVVIQflo2WBZQ5a6mOAadt94Oio9Kb-_0tdQ4Yd7us5KgZ_2ZPpZKYFVZo4gEamA19vs3cUi5COBalGAiYS_62DAuMPkVHpDqGZIO_f-W3hu4GNpL7Mfbav6d8odA-xjNyB3rlhwFOH3JwOW1LMIzkev4lN1BzAG02kCB-yH1BhVQVOglJhPEBcwgeic1Ww3R6xTHGFCtcfnACqMOsd4nWamQ3u6tTJmLv3p8laaa7h_4aaDk3zVWVq8KY-31LGLqH_UqonGmRJxlY-lxPb8MptCw6jDUymJtKcSM9aisnRHSrfkpKrtso_c8XGQU0kNVMVwppxyJ8vzLXmPJYV2dlSGjfjsga5iPE_sZqm4TJiOaIyfwu-Z6rQUYaQc9Fk6gV6w6ifiI55FXAjBkpP66wfNhfh-SEsKGe2up7qUi6fqlIsftE4uLXk70vckew_KMcUb6oGLOn2Rr0fZb7_993VsNdmAl5X95ZWrYIi-AYxnybnhNnnVzMssmNBSOs7w6lFmsmiz3M09uB0YJ4DwUTJLl_L2sRClJ3SympSuMlLez7aFzGAqNVrOZmS0k7InvXAkz-jTxNmTn8s8PyIDY6idW0Wns1bxKbWRp4KugCs--gK_YuuDicXC0LdQlJw75mGVg9k5K4Cdcf5RZXgRnOtuFZ_M4kFxzKS1S4acDtZQIfbYX3va0fkCvr7aLFi-XjAE8e_4LqKVm-pK3ijXB5mv-ewA95EKlO6uMsMtdLrKt6HCGZoh70QIEmMJzz8Pkjt5zPGwoC-ovlMJpkrH7pXIyAM2anOK5yavTB623StF8RxkpCyjLWS7LdzVo4qimy04Nzf7CFhxqB5W6xc5QvjZGg_19LO1onmF_89lTsGjSopTfMsz5H9y1nt54CHA0-IHX5g3v8HXclM6HOfhNSLs3K-QEcWcuFwaIqQKfPc1JgNMqtV2K6nXub0AEpP6ndlPpkDI8dHEF_YyYLZVLL8ZQJT3noXsXBfzDisnLMyzU4IBTsQFHfmWYAo93WtsNa4xzBbQr-VyXKmPM-Zpb4yVoFT1ExQXR9PxXSrKexu3JfdQHT2-yemRGEnvlp77HTuOucs-5b2dMzPfHN8xfv96UwMmV21tRmnQT0EJekUoHcOj4_tL82a7ppqBFIzHUdyqiFK5KhVrPqrkqawdGJ28HJMphSv6D5y7VmZ16T_7nf34oWWymeEo3ki16y9Iz8A0bWnOmHi4rYSHQsv4osc3iO3bIth7i_5OC0mzOrNntNgflttJW37nCez5Y6NATCb5HsBvaRGUVtiUXZiEcWHe_g9J_VTq&q=" + encodeURIComponent(query);
+        }
+        document.getElementById("display").style.display = "block";
+        document.getElementById("mainFrame").style.display = "block";
+
+        // Encode the full query for UV
+        const encodedQuery =  __uv$config.encodeUrl(query);
+        document.getElementById("mainFrame").src = `/service/${encodedQuery}`;
+    }
+
+    // CLICK ON A RECOMMENDATION
+    recommendationsContainer.addEventListener('click', (e) => {
+        if (e.target.classList.contains('recommendation-item')) {
+            searchInput.value = e.target.textContent;
+            recommendationsContainer.style.display = 'none';
+        }
+    });
+
+    // SETTINGS PANEL FUNCTIONALITY
+    settingsBtn.addEventListener('click', () => {
+        settingsPanel.style.display = 'block';
+        overlay.style.display = 'block';
+    });
+    closeBtn.addEventListener('click', () => {
+        settingsPanel.style.display = 'none';
+        overlay.style.display = 'none';
+    });
+    overlay.addEventListener('click', () => {
+        settingsPanel.style.display = 'none';
+        overlay.style.display = 'none';
+    });
+
+    // THEME SWITCHING
+    function setTheme(themeName) {
+    const theme = themes[themeName];
+    document.documentElement.style.setProperty('--primary', theme.primary);
+    document.documentElement.style.setProperty('--secondary', theme.secondary);
+    document.documentElement.style.setProperty('--accent', theme.accent);
+    document.documentElement.style.setProperty('--background', theme.background);
+    const homeButton = document.getElementById("homeButton");
+    homeButton.style.backgroundColor = "var(--primary)";
+    homeButton.style.color = "white";
+    homeButton.style.border = "none";
+    homeButton.style.padding = "0.5rem 1rem";
+    homeButton.style.borderRadius = "5px";
+    homeButton.style.cursor = "pointer";
+
+    // Update the video source and reload the video
+    const video = document.getElementById("background-video");
+    const source = document.getElementById("srcc");
+    source.src = theme.video;
+    video.load(); // This ensures the video reloads with the new source
+}
+
+    setTheme(localStorage.getItem("theme") || "cosmic") // SET DEFAULT THEME to "cosmic"
+
+    // ANTI-CLOSE (PREVENTS ACCIDENTAL TAB CLOSE)
+    antiCloseToggle.addEventListener('change', (e) => {
+        if (e.target.checked) {
+            window.addEventListener('beforeunload', beforeUnloadHandler);
+        } else {
+            window.removeEventListener('beforeunload', beforeUnloadHandler);
+        }
+    });
+    function beforeUnloadHandler(e) {
+        e.preventDefault();
+        e.returnValue = '';
+    }
+    
+
+    // CLICK OUTSIDE TO CLOSE AUTOCOMPLETE
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.search-container')) {
+            recommendationsContainer.style.display = 'none';
+        }
+    });
+
+  </script>
+  <script src="./assets/script.js" defer></script>
+</body>
+</html>
