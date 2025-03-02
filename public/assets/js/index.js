@@ -25,7 +25,7 @@ searchInput.addEventListener('input', (e) => {
         return;
     }
 
-    fetch("https://corsproxy.io/https://rizzmass.huh.loseyourip.com/search_complete/" + encodeURIComponent(userData))
+    fetch("https://corsproxy.io/https://google.com/complete/search?client=firefox&hl=en&q=" + encodeURIComponent(userData))
         .then(response => {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
