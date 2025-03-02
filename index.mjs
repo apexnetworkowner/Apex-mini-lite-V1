@@ -11,23 +11,36 @@ const __dirname = process.cwd();
 const publicPath = path.join(__dirname, "public");
 const app = express();
 
+// Place compression middleware at the top
+app.use(compression({ level: 1, threshold: 0, filter: () => true, memLevel: 1, strategy: 1, windowBits: 9 }));
+
 app.use("/baremux/", express.static(baremuxPath));
 app.use("/epoxy/", express.static(epoxyPath));
 app.use(express.static(publicPath));
 app.use("/uv/", express.static(uvPath));
 
-app.get("/", (req, res) => {
-  res.sendFile(path.join(publicPath, "index.html"));
-});
+/// we don't need this, / is automatically resolved to index.html
+//app.get("/", (req, res) => {
+//  res.sendFile(path.join(publicPath, "index.html"));
+//});
 
-app.use(compression({ level: 1, threshold: 0, filter: () => true, memLevel: 1, strategy: 1, windowBits: 9 }));
+const rawPort = process.env.PORT || "3000";
+const port = parseInt(rawPort, 10);
+if (isNaN(port) || port < 1 || port > 65535) {
+  console.error(`Invalid port number: ${rawPort}`);
+  process.exit(1);
+}
 
-const port = parseInt(process.env.PORT || "3000");
 const server = createServer(app);
 
 server.on("upgrade", (req, socket, head) => {
   if (req.url.startsWith("/w/")) {
-    wisp.routeRequest(req, socket, head);
+    try{
+      wisp.routeRequest(req, socket, head);
+    } catch(e){
+      console.error("wisp error", e);
+      socket.end();
+    }
   } else {
     socket.end();
   }
@@ -53,6 +66,7 @@ async function shutdown(signal) {
     process.exit(0);
   } catch (err) {
     console.error(`Error: ${err.message}`);
+    console.error(err.stack);
     process.exit(1);
   }
 }
