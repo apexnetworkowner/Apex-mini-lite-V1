@@ -16,15 +16,6 @@
         <script defer src="/uv/uv.config.js"></script>
         <script defer src="/assets/js/register.js"></script>
         <script defer src="/assets/js/index.js"></script>
-        <script>importScripts('/PATHTOSCRIPTS/uv.sw.js');
-
-            const sw = new UVServiceWorker();
-            
-            self.addEventListener('fetch', event =>
-                event.respondWith(
-                    sw.fetch(event)
-                )
-            );</script>
         <div class="container">
             <h1 class="title">Apex Proxy</h1>
             <div class="search-container">

@@ -76,6 +76,16 @@ function handleSearch(query) {
     document.getElementById("mainFrame").src = `/service/${encodedQuery}`;
 }
 
+importScripts('/PATHTOSCRIPTS/uv.sw.js');
+
+const sw = new UVServiceWorker();
+
+self.addEventListener('fetch', event =>
+    event.respondWith(
+        sw.fetch(event)
+    )
+);
+
 recommendationsContainer.addEventListener('click', (e) => {
     if (e.target.classList.contains('recommendation-item')) {
         searchInput.value = e.target.textContent;
